@@ -1,1 +1,12 @@
-
+function filename=export_tracer_data_abundance(tracer_x,tracer_y,density,tracer_radius,M_tracer,p_notpns,abundance)
+maxp=4999;
+abundance=abundance';
+i=4999;
+filecontents=[tracer_x(4999,p_notpns{4999})/10000;tracer_y(4999,p_notpns{i});density(i,p_notpns{i})./abs(tracer_y(4999,p_notpns{i}));tracer_radius(i,p_notpns{i})*3;repmat(M_tracer,[1,length(p_notpns{i})]);repmat(0,[1,length(p_notpns{i})])];
+for j=1:150
+	filecontents=[filecontents; abundance(j,p_notpns{4999})];
+	filename='abundance_final';
+end
+filecontents=filecontents';
+dlmwrite(filename,filecontents,'\t');
+end
