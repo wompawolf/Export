@@ -1,5 +1,4 @@
 
- 
 function filename=export_tracer_data_new(tracer_x,tracer_y,tracer_radius,M_tracer,p_notpns,res)
 
 % find density on the fly
