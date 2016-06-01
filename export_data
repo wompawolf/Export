@@ -1,4 +1,3 @@
-
 function filename=export_tracer_data_new(tracer_x,tracer_y,tracer_radius,M_tracer,p_notpns,res)
 
 % find density on the fly
@@ -8,8 +7,9 @@ disp 'done'
 
 radius=tracer_radius(:,:,res); % There is a glitch in matlab and if you don't reduce a large 3d matrix and multiply by a constant->memory leak and unending loop
 % radius=radius.*1.5;
+fprintf('\tLoop: %4d at %4d-%02d-%02d %02d:%02d:%06.3f\n', p, datevec(now))
 
-for i=1:10:4999
+for i=1:10:4000
 	strName='';
 	for j=1:4-(floor(log10(i))+1)
 		strName=strcat(strName,'0');
@@ -21,5 +21,7 @@ for i=1:10:4999
 	filecontents=[tracer_x(i,p_notpns{i});tracer_y(i,p_notpns{i});density(i,p_notpns{i});radius(i,p_notpns{i});repmat(M_tracer,[1,length(p_notpns{i})]);repmat(0,[1,length(p_notpns{i})])]';
 	filecontents=[filecontents;[tracer_x(i,p_notpns{i});tracer_y(i,p_notpns{i})*-1;density(i,p_notpns{i});radius(i,p_notpns{i});repmat(M_tracer,[1,length(p_notpns{i})]);repmat(0,[1,length(p_notpns{i})])]'];
 	dlmwrite(filename,filecontents,'\t');
+
+
 end
 end
