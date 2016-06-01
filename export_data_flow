@@ -1,4 +1,3 @@
-
 % This export function is used to output a formatted ASCII file (cols = x,y,density,smoothing length,mass,particle type) to input 
 % directly into splash for visualization. Currently under development
 %to work for all frames
@@ -49,7 +48,7 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
                                     radius(:,p) = 2 * tracer_y(:,p); %Distance to ghost is 2*height                                                     from x axis
                                 end
                     end
-            
+    end 
        
                 %find density on the fly by calling density function
                 disp 'computing density'
@@ -57,7 +56,40 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
                 disp 'done'
                 
                 fprintf('\tLoop: %4d at %4d-%02d-%02d %02d:%02d:%06.3f\n', p, datevec(now))
-    end 
+    
    
                 
                 
+                %Begin creating output_framenumber filename format
+                strName='';
+                for j =1:4-(floor(log10(i))+1)
+                        strName=strcat(strName, '0');
+                end
+                filename=strcat('output_', strName, int2str(i));
+       
+    
+    %meat of the file
+    filecontentsa=[tracer_x(i,p_notpns{i});...
+                   tracer_y(i,p_notpns{i});...
+                   density(i,p_notpns{i});...
+                   radius(i,p_notpns{i});...
+                   repmat(M_tracer,[1,length(p_notpns{i})]);...
+                   zeros([1,length(p_notpns{i})])]';
+    
+      %Creating the mirror axi-symmetric particles          
+    filecontentsb=[tracer_x(i,p_notpns{i});...
+                 tracer_y(i,p_notpns{i}).*-1;...
+                  density(i,p_notpns{i});...
+                  radius(i,p_notpns{i});...
+                  repmat(M_tracer,[1,length(p_notpns{i})]);...
+                  zeros([1,length(p_notpns{i})])]';
+    
+              %Combine both real and mirrors
+            filecontents=[filecontentsa;filecontentsb];
+    
+              %Write to ASCII file
+                 dlmwrite(filename,filecontents,'\t');
+ end
+ end
+               
+        
