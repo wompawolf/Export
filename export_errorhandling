@@ -14,9 +14,9 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
         c_number = 40;
         r_number = p_number/c_number;
 
-        column = zeros(4000);
-        row = zeros(4000);
-        radius_out = zeros(4000);
+        column = [1:40];                        % Here , columns and rows were initialized by zeros(4000). However, 
+        row = [1:100];                          % during output, the column number and row number of each particle
+        radius_out = zeros(4000);               % is being output as though they are the same. Attempt to fix.
         radius_in = zeros(4000);
         density = zeros(4000);
         
