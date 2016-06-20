@@ -4,20 +4,25 @@
 
 
 
-function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y, D_i, M_tracer, p_notpns)
+function filename=export_tracer_data_newest(deltatheta_initial,tracer_x, tracer_y, D_i, M_tracer, p_notpns)
 
 %Now to implement a selector mechanism for the smoothing length or radius
         %deltatheta(tracer_x,tracer_y);
       
         radius = zeros(4999,4000);
+        radius_out = zeros(4000);
+        radius_in = zeros(4000);
+        
         p_number = 4000;
         c_number = 40;
         r_number = p_number/c_number;
+        disp (r_number)
 
         column = [1:40];                        % Here , columns and rows were initialized by zeros(4000). However, 
         row = [1:100];                          % during output, the column number and row number of each particle
-        radius_out = zeros(4000);               % is being output as though they are the same. Attempt to fix.
-        radius_in = zeros(4000);
+                                              % is being output as though they are the same; row - 101, c - 0. Attempt to fix.
+     
+     
         density = zeros(4000);
         
  for i = 1%:4999  
@@ -27,8 +32,9 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
            
             
             row(p) = cast((p_number / c_number), 'uint8') + 1;
-            column(p) = mod(p_number,r_number);
+            column(p) = mod(r_number,p_number);
             
+            disp(p)
             disp(row(p))
             disp(column(p))
     
@@ -51,7 +57,12 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
                                 elseif (column == 1 || column == c_number)
                                     
                                     disp '** HEY WE MADE IT **' 
-                                    radius(:,p) = 2 * tracer_y(:,p); %Distance to ghost is 2*height                                                     from x axis
+                                    
+                                    %A check for if we are making it to this portion of the code
+                                    % Ideally, our boundary particles (1,41,81,...) would be routed to this option.
+                                    
+                                    radius(:,p) = 2 * tracer_y(:,p); %Distance to ghost is 2 times the height to the x-axis
+                                                                     % from th Whoosley,Hegar models.
                                 end
                     end
             
@@ -63,7 +74,10 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
                 
                 fprintf('\tLoop: %4d at %4d-%02d-%02d %02d:%02d:%06.3f\n', p, datevec(now))
     end 
-     %Begin creating output_framenumber filename format
+   
+                
+                
+                %Begin creating output_framenumber filename format
                 strName='';
                 for j =1:4-(floor(log10(i))+1)
                         strName=strcat(strName, '0');
@@ -94,4 +108,5 @@ function filename=export_tracer_data_new_f(deltatheta_initial,tracer_x, tracer_y
                  dlmwrite(filename,filecontents,'\t');
  end
  end
-    
+               
+        
