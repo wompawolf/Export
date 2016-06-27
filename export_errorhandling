@@ -31,7 +31,7 @@ function filename=export_tracer_data_newest(deltatheta_initial,tracer_x, tracer_
            
             
             row(p) = cast((p / c_number), 'uint8') + 1;
-            column(p) = mod(p_number,row(p));
+            column(p) = mod(p,row(p));
             
             disp(p)
             disp(row(p))
