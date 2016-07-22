@@ -1,0 +1,139 @@
+% This export function is used to output a formatted ASCII file (cols = x,y,density,smoothing length,mass,particle type) to input 
+% directly into splash for visualization. Currently under development
+%to work for all frames
+
+
+
+function filename=export_tracer_data_newest(deltatheta_initial,tracer_x, tracer_y, D_i, M_tracer, p_notpns)
+
+%Now to implement a selector mechanism for the smoothing length or radius
+        %deltatheta(tracer_x,tracer_y);
+      
+        radius = zeros(4999,4000);
+        radius_out = zeros(4999,4000);
+        radius_in = zeros(4999,4000);
+        
+        p_number = 4000;
+        c_number = 40;
+        r_number = p_number/c_number;
+       
+        
+ for i = 1%:4999  
+     
+    for p = 1:p_number
+    
+           
+            p_f = single(p);                        %Conversion to floating point will prevent
+            c_number_f = single(c_number);          %rounding discontinuities in the future.
+        
+        
+        
+        column(p) = uint8(mod(p_f,c_number_f));            
+            if (column(p) == 0)                    %Special boundary case; since we have 40 columns, 
+                                                    % mod( n*40, 40) will return 0, but these particles
+                                               % are our end-of-row particles, so column = 40, not 0.
+                column(p) = c_number;               %We go ahead and account for this here. 
+            end 
+            
+        row(p) = ((p - column(p)) / (c_number)) + 1;
+                
+            %Using this row/column information we will determine
+            %what smoothing length each particle needs.
+            %First check: is it aligned? If misaligned by
+            %more than a hundredth of a radian, keep
+            %checking other options.
+            % Otherwise use fourth neighbor distance
+            
+            
+                 if (deltatheta_initial(1,p) < abs(10^-2))
+                                        
+            
+             %Second: is it a polar particle? (first or last column)
+             %If so, use ghost distance.
+             %Else, 
+                                
+                                 if (column(p) == 1 || column(p) == c_number)
+                                    
+                                    disp '** HEY WE MADE IT **' 
+                                    
+                                    % Ideally, our boundary particles (1,41,81,...) would be routed to this option.
+                                    
+                                    
+                                    radius(:,p) = 2 * tracer_y(:,p);        %Distance to ghost particle of p + 4000 is 2 times the 
+                                                                            %distance to the x-axis
+                                                                            % from the Whoosley,Hegar models.
+                   
+            %Third, is it in the last row?
+            %If so, use an inner neighbor distance.
+            %Else use the minimum neighbor distance.                
+         
+                                 elseif      row(p) == 100 
+                                     
+                                      disp ' Last row case works'
+                                         
+                                    radius_out(:,p) = sqrt(abs((tracer_x(:,p) - tracer_x(:,p+1).^2+(tracer_y(:,p) - tracer_y(:,p+1)).^2))); %distance from p to p + 1
+                                    radius_in(:,p) = sqrt(abs((tracer_x(:,p) - tracer_x(:,p-1).^2+(tracer_y(:,p) - tracer_y(:,p-1)).^2)));  %distance from p to p - 1
+                                    radius(:,p) = max(radius_out(:,p), radius_in(:,p));
+                                     
+                                     
+                                 else
+                                                                     
+                                    disp 'Columns 2-39 case works'         
+                                   radius_out(:,p) = sqrt(abs((tracer_x(:,p) - tracer_x(:,p+1).^2+(tracer_y(:,p) - tracer_y(:,p+1)).^2))); %distance from p to p + 1
+                                   radius_in(:,p) = sqrt(abs((tracer_x(:,p) - tracer_x(:,p-1).^2+(tracer_y(:,p) - tracer_y(:,p-1)).^2)));  %distance from p to p - 1
+                                    radius(:,p) = max(radius_out(:,p), radius_in(:,p));
+                                    
+                                 end
+                                 
+                                 
+                 else
+                     
+                     radius(:,p) =   D_i(p,4);               
+                     disp 'Delta theta case works'
+                                 
+                                   
+                 end    
+                                
+            
+                %Now we are ready to calculate density for each region.
+                %find density on the fly by calling density function
+                disp 'computing density'
+                density =compute_density_from_smoothing_length(radius, M_tracer, tracer_y);
+                disp 'done'
+                
+                fprintf('\tLoop: %4d at %4d-%02d-%02d %02d:%02d:%06.3f\n', p, datevec(now))
+    end 
+   
+                
+                
+                %Begin creating output_framenumber filename format
+                strName='';
+                for j =1:4-(floor(log10(i))+1)
+                        strName=strcat(strName, '0');
+                end
+                filename=strcat('output_', strName, int2str(i));
+        
+    
+    %meat of the file
+    filecontentsa=[tracer_x(i,p_notpns{i});...
+                   tracer_y(i,p_notpns{i});...
+                   density(i,p_notpns{i});...
+                   radius(i,p_notpns{i});...
+                   repmat(M_tracer,[1,length(p_notpns{i})]);...
+                   zeros([1,length(p_notpns{i})])]';
+    
+      %Creating the mirror axi-symmetric particles          
+    filecontentsb=[tracer_x(i,p_notpns{i});...
+                 tracer_y(i,p_notpns{i}).*-1;...
+                  density(i,p_notpns{i});...
+                  radius(i,p_notpns{i});...
+                  repmat(M_tracer,[1,length(p_notpns{i})]);...
+                  zeros([1,length(p_notpns{i})])]';
+    
+              %Combine both real and mirrors
+            filecontents=[filecontentsa;filecontentsb];
+    
+              %Write to ASCII file
+                 dlmwrite(filename,filecontents,'\t');
+ end
+ end
